@@ -1,6 +1,7 @@
 import requests, base64, json, re
 import hashlib
-
+import lxml.html as html
+#from lxml.html import parse, fromstring
 
 img_url = 'https://obd-memorial.ru/html/getimageinfo?id=70782617&_=1582546278185'
 
@@ -17,6 +18,19 @@ def getStringHash(id):
     p = h.hexdigest()
     return str(p)
 #####################################
+def get_info(id,heareds,cookies):
+    info_url = 'https://obd-memorial.ru/html/info.htm?id=4138741'
+    res3 = requests.get(info_url,headers=headers,cookies=cookies,allow_redirects = True)
+    #print(res3.text)
+    doc = html.fromstring(res3.text)
+    #print(doc.find_class('card_parameter'))
+    for div in doc.find_class('card_parameter'):
+        #print()
+        print ('%s: %s' % (div.getchildren()[0].text_content(), div.getchildren()[1].text_content()))
+    return True
+
+#####################################
+
 
 res1 = requests.get(info_url,allow_redirects = True)
 print(res1.status_code)
@@ -33,6 +47,9 @@ print(res2.status_code)
 print(res2.cookies)
 print('*****************')
 
+get_info(345,headers,cookies)
+
+exit(1)
 
 res3 = requests.get(img_url,headers=headers,cookies=cookies,allow_redirects = True)
 print(res3.status_code)
