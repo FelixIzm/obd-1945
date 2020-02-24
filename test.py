@@ -1,4 +1,7 @@
 import requests, base64, json, re
+import hashlib
+
+
 img_url = 'https://obd-memorial.ru/html/getimageinfo?id=70782617&_=1582546278185'
 
 info_url = 'https://obd-memorial.ru/html/info.htm?id=70782617'
@@ -29,11 +32,18 @@ res3 = requests.get(img_url,headers=headers,cookies=cookies,allow_redirects = Tr
 print(res3.status_code)
 #print(res3.text)
 data = json.loads(res3.text)
-#print(str(data[0]))
-result = re.findall(r'src=\"(\S+)\"', str(data[0]))
-print (result)
-result = re.findall(r'id=\"(\d+)\"', str(data[0]))
-print(len(result))
+print(str(data[0].id))
+src = re.findall(r'src=\"(\S+)\"', str(data[0]))
+print (src)
+ids = re.findall(r'id=\"(\d+)\"', str(data[0]))
+print(len(ids))
+
+h = hashlib.md5(b"password")
+p = h.hexdigest()
+print(p)
+#req="http://obd-memorial.ru/memorial/fullimage?id="+$id_page+"&id1="+( Get-StringHash $id_page)+"&path="+$path_pic
+
+exit(1)
 
 '''
 cookies = {}
