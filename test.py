@@ -3,9 +3,22 @@ import hashlib
 import lxml.html as html
 #from lxml.html import parse, fromstring
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 img_url = 'https://obd-memorial.ru/html/getimageinfo?id=70782617&_=1582546278185'
 
 info_url = 'https://obd-memorial.ru/html/info.htm?id=70782617'
+#####################################
+def parse_file (name_file):
+    dict_ = {}
+    f = open(name_file, 'r')
+    s = f.read()
+    dict_={}
+    list_ = s.splitlines()
+    for item in list_:
+        items = item.split(":")
+        dict_[items[0]] = items[1].lstrip()
+    return dict_
 #####################################
 def make_str_cookie(cookies):
     str_cook = ''
@@ -52,16 +65,41 @@ if(res1.status_code==307):
         if(res3.status_code==200):
             print(res3.status_code)
             data = json.loads(res3.text)
-            print(len(data))
+            #print(len(data))
             page = data[0]
             src = re.findall(r'src=\"(\S+)\"', str(page))
-            img_url="https://cdn.obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
+            img_cdn_url="https://cdn.obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
+            img_url="https://obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
+
+            headers['Cookie'] = make_str_cookie(res3.cookies)
+
             print(page['id'])
-            print(img_url)
-            r = requests.get(img_url,headers=headers,cookies=cookies, allow_redirects=True)
+            #print(img_url)
+            #print(headers)
+            print(requests.utils.dict_from_cookiejar(res3.cookies))
+            #print(cookies)
+            ############################
+            headers = parse_file(BASE_DIR+'/h_url.txt')
+            headers['Cookie'] = make_str_cookie(cookies)
+            r = requests.post(img_url,headers=headers,cookies=cookies, allow_redirects = False)
+            print('***********************')
+            print(r.status_code)
+            print(r.headers)
+            print(requests.utils.dict_from_cookiejar(r.cookies))
+
+
+            print('***********************')
+            headers = parse_file(BASE_DIR+'/header_url.txt')
+            r = requests.get(img_cdn_url,headers=headers,stream=True)
+            print(r.status_code)
+            print(r.headers)
+            print('***********************')
+            ############################
             header = r.headers
+            #print(header)
             content_length = header.get('content-length', None)
-            print(content_length)
+            #print(r.status_code)
+            #print(content_length)
             content_type = header.get('content-type')
             '''
             for page in data:
