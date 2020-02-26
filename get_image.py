@@ -6,7 +6,7 @@ from openpyxl import Workbook
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-cols = ['ID','Фамилия','Имя','Отчество','Дата рождения/Возраст','Место рождения','Дата и место призыва','Последнее место службы','Воинское звание']
+cols = ['ID scan','ID','Фамилия','Имя','Отчество','Дата рождения/Возраст','Место рождения','Дата и место призыва','Последнее место службы','Воинское звание','Судьба','Дата смерти','Первичное место захоронения']
 
 def parse_file (name_file):
     dict_ = {}
@@ -30,16 +30,23 @@ def getStringHash(id):
     p = h.hexdigest()
     return str(p)
 #####################################
-def get_info(id,headers,cookies):
+def get_info(id_scan,id):
     info_url = 'https://obd-memorial.ru/html/info.htm?id='+str(id)
-    res3 = requests.get(info_url,headers=headers,cookies=cookies,allow_redirects = True)
-    #print(res3.text)
+    res3 = requests.get(info_url,allow_redirects = True)
     doc = html.fromstring(res3.text)
-    #print(doc.find_class('card_parameter'))
+    divs = {}
     for div in doc.find_class('card_parameter'):
-        #print()
-        print ('%s: %s' % (div.getchildren()[0].text_content(), div.getchildren()[1].text_content()))
-    return True
+        divs[div.getchildren()[0].text_content()] = div.getchildren()[1].text_content()
+        #print ('%s: %s' % (div.getchildren()[0].text_content(), div.getchildren()[1].text_content()))
+    list_col = []
+    for col in cols:
+        if(col in divs.keys()):
+            list_col.append(divs[col])
+        else:
+            list_col.append('')
+    list_col[1] = id
+    list_col[0] = id_scan
+    return list_col
 #####################################
 
 info_url = 'https://obd-memorial.ru/html/info.htm?id=70782617'
@@ -56,9 +63,21 @@ if(res1.status_code==307):
 
     response = requests.get(img_info)
     response_dict = json.loads(response.text)
+    #print(response_dict[0]['mapData'].keys()[0])
     i=0
+    row_num = 1
+    workbook = Workbook()
+    # Get active worksheet/tab
+    worksheet = workbook.active
+    worksheet.title = 'Person'
+    columns = cols
+    for col_num, column_title in enumerate(columns, 1):
+        cell = worksheet.cell(row=row_num, column=col_num)
+        cell.value = column_title
+
     for item in response_dict:
-        #print(++i, item['id'])
+        i+=1
+        print(i, item['id'])
         img_url="https://obd-memorial.ru/html/images3?id="+str(item['id'])+"&id1="+(getStringHash(item['id']))+"&path="+item['img']
         headers_302 = parse_file(BASE_DIR+'/header_302.txt')
         headers_302['Cookie'] = make_str_cookie(cookies)
@@ -75,24 +94,22 @@ if(res1.status_code==307):
             req_img = requests.get("https://cdn.obd-memorial.ru/html/images3",headers=headers_img,params=params,stream = True,allow_redirects = False )
             #####################
             if(req_img.status_code==200):
-                workbook = Workbook()
-                # Get active worksheet/tab
-                worksheet = workbook.active
-                worksheet.title = 'Person'
-                columns = cols
-                row_num = 1
-                # Assign the titles for each cell of the header
-                for col_num, column_title in enumerate(columns, 1):
-                    cell = worksheet.cell(row=row_num, column=col_num)
-                    cell.value = column_title
-                
-                print('************************')
-                for id in item['mapData'].keys():
-                    print(id)
+                for id in response_dict[0]['mapData'].keys():
+                    row_num += 1
+                    row = get_info(response_dict[0]['id'],id)
+                    for col_num, cell_value in enumerate(row, 1):
+                        cell = worksheet.cell(row=row_num, column=col_num)
+                        cell.value = cell_value
+
+
+                #for id in item['mapData'].keys():
+                #    print(id)
 
                 #location = os.path.abspath("./scan/"+str(item['id'])+'.jpg')
                 #f = open(location, 'wb')
                 #f.write(req_img.content)
                 #f.close()
         
+    workbook.save(filename = 'sample_book.xlsx')
+    exit(1)
 
