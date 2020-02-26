@@ -5,6 +5,5 @@ Accept-Language: ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3
 Accept-Encoding: gzip, deflate, br
 Referer: https://obd-memorial.ru/html/info.htm?id=70782617
 Connection: keep-alive
-Cookie: JSESSIONID=EE40E6C4A90B060745740BB0F0A10009
 Pragma: no-cache
 Cache-Control: no-cache

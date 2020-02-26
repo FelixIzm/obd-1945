@@ -65,42 +65,24 @@ if(res1.status_code==307):
         if(res3.status_code==200):
             print(res3.status_code)
             data = json.loads(res3.text)
-            #print(len(data))
+            #################################
             page = data[0]
             src = re.findall(r'src=\"(\S+)\"', str(page))
             img_cdn_url="https://cdn.obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
             img_url="https://obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
-
-            headers['Cookie'] = make_str_cookie(res3.cookies)
-
-            print(page['id'])
-            #print(img_url)
-            #print(headers)
-            print(requests.utils.dict_from_cookiejar(res3.cookies))
-            #print(cookies)
-            ############################
-            headers = parse_file(BASE_DIR+'/h_url.txt')
+            # Готовим headers для первого запроса с 302 статусов
+            headers = parse_file(BASE_DIR+'/header_302.txt')
             headers['Cookie'] = make_str_cookie(cookies)
-            r = requests.post(img_url,headers=headers,cookies=cookies, allow_redirects = False)
+            req302 = requests.get(img_url,headers=headers,cookies=cookies, allow_redirects = False)
             print('***********************')
-            print(r.status_code)
-            print(r.headers)
-            print(requests.utils.dict_from_cookiejar(r.cookies))
-
-
+            print(req302.status_code)
+            print(req302.headers['location'])
             print('***********************')
-            headers = parse_file(BASE_DIR+'/header_url.txt')
-            r = requests.get(img_cdn_url,headers=headers,stream=True)
-            print(r.status_code)
-            print(r.headers)
+            headers = parse_file(BASE_DIR+'/header_img.txt')
+            req_img = requests.get(req302.headers['location'],headers=headers,stream = True)
+            print(req_img.status_code)
+            print(req_img.url)
             print('***********************')
-            ############################
-            header = r.headers
-            #print(header)
-            content_length = header.get('content-length', None)
-            #print(r.status_code)
-            #print(content_length)
-            content_type = header.get('content-type')
             '''
             for page in data:
                 #print(page['id'])
