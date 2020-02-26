@@ -5,5 +5,3 @@ Accept-Language: ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3
 Accept-Encoding: gzip, deflate, br
 Referer: https://obd-memorial.ru/html/info.htm?id=70782617
 Connection: keep-alive
-Pragma: no-cache
-Cache-Control: no-cache

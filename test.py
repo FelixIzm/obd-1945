@@ -8,6 +8,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 img_url = 'https://obd-memorial.ru/html/getimageinfo?id=70782617&_=1582546278185'
 
 info_url = 'https://obd-memorial.ru/html/info.htm?id=70782617'
+
 #####################################
 def parse_file (name_file):
     dict_ = {}
@@ -41,7 +42,6 @@ def get_info(id,heareds,cookies):
         #print()
         print ('%s: %s' % (div.getchildren()[0].text_content(), div.getchildren()[1].text_content()))
     return True
-
 #####################################
 
 
@@ -60,10 +60,11 @@ if(res1.status_code==307):
         print(res2.status_code)
         print('*****************')
 
-        #get_info(345,headers,cookies)
+        get_info(345,headers,cookies)
+        exit(1)
         res3 = requests.get(img_url,headers=headers,cookies=cookies,allow_redirects = True)
         if(res3.status_code==200):
-            print(res3.status_code)
+            #print(res3.status_code)
             data = json.loads(res3.text)
             #################################
             page = data[0]
@@ -71,18 +72,29 @@ if(res1.status_code==307):
             img_cdn_url="https://cdn.obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
             img_url="https://obd-memorial.ru/html/images3?id="+str(page['id'])+"&id1="+(getStringHash(page['id']))+"&path="+src[0]
             # Готовим headers для первого запроса с 302 статусов
-            headers = parse_file(BASE_DIR+'/header_302.txt')
-            headers['Cookie'] = make_str_cookie(cookies)
-            req302 = requests.get(img_url,headers=headers,cookies=cookies, allow_redirects = False)
-            print('***********************')
-            print(req302.status_code)
-            print(req302.headers['location'])
-            print('***********************')
-            headers = parse_file(BASE_DIR+'/header_img.txt')
-            req_img = requests.get(req302.headers['location'],headers=headers,stream = True)
-            print(req_img.status_code)
-            print(req_img.url)
-            print('***********************')
+            #############################
+            ######   get image ##########
+            #############################
+            headers_302 = parse_file(BASE_DIR+'/header_302.txt')
+            headers_302['Cookie'] = make_str_cookie(cookies)
+            headers_302['Referer'] = 'https://obd-memorial.ru/html/info.htm?id=70782617'
+            req302 = requests.get(img_url,headers=headers_302,cookies=cookies, allow_redirects = False)
+            if(req302.status_code==302):
+                params = {}
+                params['id'] = str(page['id'])
+                params['id1'] = getStringHash(page['id'])
+                params['path'] = src[0]
+                headers_img = parse_file(BASE_DIR+'/header_img.txt')
+                headers_img['Referer'] = 'https://obd-memorial.ru/html/info.htm?id=70782617'
+                #####################
+                req_img = requests.get("https://cdn.obd-memorial.ru/html/images3",headers=headers_img,params=params,stream = True,allow_redirects = False )
+                #####################
+                if(req_img.status_code==200):
+
+                    location = os.path.abspath("./scan/"+str(page['id'])+'.jpg')
+                    f = open(location, 'wb')
+                    f.write(req_img.content)
+                    f.close()
             '''
             for page in data:
                 #print(page['id'])
