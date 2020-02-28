@@ -94,16 +94,13 @@ if(res1.status_code==307):
             req_img = requests.get("https://cdn.obd-memorial.ru/html/images3",headers=headers_img,params=params,stream = True,allow_redirects = False )
             #####################
             if(req_img.status_code==200):
-                for id in response_dict[0]['mapData'].keys():
+                for id in item['mapData'].keys():
                     row_num += 1
-                    row = get_info(response_dict[0]['id'],id)
+                    row = get_info(item['id'],id)
                     for col_num, cell_value in enumerate(row, 1):
                         cell = worksheet.cell(row=row_num, column=col_num)
                         cell.value = cell_value
 
-
-                #for id in item['mapData'].keys():
-                #    print(id)
 
                 #location = os.path.abspath("./scan/"+str(item['id'])+'.jpg')
                 #f = open(location, 'wb')

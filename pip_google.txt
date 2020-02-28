@@ -1,0 +1,1 @@
+pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
