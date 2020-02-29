@@ -7,6 +7,8 @@ from openpyxl import Workbook
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 cols = ['ID scan','ID','Фамилия','Имя','Отчество','Дата рождения/Возраст','Место рождения','Дата и место призыва','Последнее место службы','Воинское звание','Судьба','Дата смерти','Первичное место захоронения']
+get_image = False
+get_excel = True
 
 def parse_file (name_file):
     dict_ = {}
@@ -78,34 +80,38 @@ if(res1.status_code==307):
     for item in response_dict:
         i+=1
         print(i, item['id'])
-        img_url="https://obd-memorial.ru/html/images3?id="+str(item['id'])+"&id1="+(getStringHash(item['id']))+"&path="+item['img']
-        headers_302 = parse_file(BASE_DIR+'/header_302.txt')
-        headers_302['Cookie'] = make_str_cookie(cookies)
-        headers_302['Referer'] = info_url
-        req302 = requests.get(img_url,headers=headers_302,cookies=cookies, allow_redirects = False)
-        if(req302.status_code==302):
-            params = {}
-            params['id'] = str(item['id'])
-            params['id1'] = getStringHash(item['id'])
-            params['path'] = item['img']
-            headers_img = parse_file(BASE_DIR+'/header_img.txt')
-            headers_img['Referer'] = info_url
-            #####################
-            req_img = requests.get("https://cdn.obd-memorial.ru/html/images3",headers=headers_img,params=params,stream = True,allow_redirects = False )
-            #####################
-            if(req_img.status_code==200):
-                for id in item['mapData'].keys():
-                    row_num += 1
-                    row = get_info(item['id'],id)
-                    for col_num, cell_value in enumerate(row, 1):
-                        cell = worksheet.cell(row=row_num, column=col_num)
-                        cell.value = cell_value
+
+        if(get_excel):
+            for id in item['mapData'].keys():
+                row_num += 1
+                row = get_info(item['id'],id)
+                #print('\t',id)
+                for col_num, cell_value in enumerate(row, 1):
+                    cell = worksheet.cell(row=row_num, column=col_num)
+                    cell.value = cell_value
 
 
-                #location = os.path.abspath("./scan/"+str(item['id'])+'.jpg')
-                #f = open(location, 'wb')
-                #f.write(req_img.content)
-                #f.close()
+        if(get_image):
+            img_url="https://obd-memorial.ru/html/images3?id="+str(item['id'])+"&id1="+(getStringHash(item['id']))+"&path="+item['img']
+            headers_302 = parse_file(BASE_DIR+'/header_302.txt')
+            headers_302['Cookie'] = make_str_cookie(cookies)
+            headers_302['Referer'] = info_url
+            req302 = requests.get(img_url,headers=headers_302,cookies=cookies, allow_redirects = False)
+            if(req302.status_code==302):
+                params = {}
+                params['id'] = str(item['id'])
+                params['id1'] = getStringHash(item['id'])
+                params['path'] = item['img']
+                headers_img = parse_file(BASE_DIR+'/header_img.txt')
+                headers_img['Referer'] = info_url
+                #####################
+                req_img = requests.get("https://cdn.obd-memorial.ru/html/images3",headers=headers_img,params=params,stream = True,allow_redirects = False )
+                #####################
+                if(req_img.status_code==200):
+                    location = os.path.abspath("./scan/"+str(item['id'])+'.jpg')
+                    f = open(location, 'wb')
+                    f.write(req_img.content)
+                    f.close()
         
     workbook.save(filename = 'sample_book.xlsx')
     exit(1)
